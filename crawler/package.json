@@ -9,10 +9,15 @@
     "login": "node playwright/login.js",
     "test": "node playwright/test.js"
   },
-  "keywords": ["upwork", "crawler", "playwright"],
+  "keywords": [
+    "upwork",
+    "crawler",
+    "playwright"
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "nodemailer": "^9.0.3",
     "playwright": "^1.42.0"
   }
 }
