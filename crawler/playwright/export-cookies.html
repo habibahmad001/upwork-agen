@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upwork Session Exporter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #00a0dc; }
+        .warning {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+        button {
+            background: #00a0dc;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover { background: #0088bb; }
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            margin: 20px 0;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Upwork Session Exporter</h1>
+
+        <div class="warning">
+            <strong>⚠️ Important:</strong> This tool only works when opened from upwork.com!
+        </div>
+
+        <div id="check-domain" class="error">
+            ❌ Not on upwork.com. Please:
+            <ol>
+                <li>Login to <a href="https://www.upwork.com" target="_blank">upwork.com</a></li>
+                <li>Open DevTools (F12)</li>
+                <li>Go to Console</li>
+                <li>Copy/paste the code below and run it</li>
+            </ol>
+        </div>
+
+        <div id="on-upwork" style="display:none;">
+            <button onclick="exportSession()">📋 Export Session Data</button>
+            <button onclick="copyToClipboard()">📑 Copy to Clipboard</button>
+            <button onclick="downloadFile()">💾 Download File</button>
+
+            <div id="success-msg" class="success" style="display:none;">
+                ✅ Session exported successfully! Check the output below.
+            </div>
+
+            <textarea id="output" readonly placeholder="Click 'Export Session Data' to see your session..."></textarea>
+
+            <p><strong>Next steps:</strong></p>
+            <ol>
+                <li>Click "Copy to Clipboard" or "Download File"</li>
+                <li>Save the content to: <code>crawler/playwright/storage.json</code></li>
+                <li>Run: <code>node crawler.js</code></li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Check if on upwork.com
+        if (window.location.hostname.includes('upwork.com')) {
+            document.getElementById('check-domain').style.display = 'none';
+            document.getElementById('on-upwork').style.display = 'block';
+        }
+
+        let exportedData = null;
+
+        function exportSession() {
+            try {
+                // Export cookies
+                const cookies = document.cookie.split(';').map(c => {
+                    const [name, ...rest] = c.split('=');
+                    return {
+                        name: name.trim(),
+                        value: rest.join('=').trim(),
+                        domain: '.upwork.com',
+                        path: '/',
+                        secure: true,
+                        httpOnly: false,
+                    };
+                });
+
+                // Export localStorage
+                const localStorageData = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    localStorageData[key] = localStorage.getItem(key);
+                }
+
+                exportedData = {
+                    timestamp: new Date().toISOString(),
+                    url: window.location.href,
+                    cookies: cookies,
+                    localStorage: localStorageData,
+                };
+
+                document.getElementById('output').value = JSON.stringify(exportedData, null, 2);
+                document.getElementById('success-msg').style.display = 'block';
+                document.getElementById('success-msg').textContent = '✅ Session exported! ' + cookies.length + ' cookies, ' + Object.keys(localStorageData).length + ' localStorage items';
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('output');
+            if (!output.value) {
+                alert('Please export session first!');
+                return;
+            }
+            output.select();
+            document.execCommand('copy');
+            alert('✅ Copied to clipboard!');
+        }
+
+        function downloadFile() {
+            const output = document.getElementById('output');
+            if (!output.value) {
+                alert('Please export session first!');
+                return;
+            }
+            const blob = new Blob([output.value], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'storage.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

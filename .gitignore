@@ -1,0 +1,45 @@
+# Laravel
+/node_modules
+/public/build
+/public/hot
+/storage/*.key
+/vendor
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+
+# Crawler
+/crawler/node_modules
+/crawler/playwright/storage.json
+/crawler/playwright/jobs.json
+
+# IDE
+.idea
+.vscode
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Laravel specific
+/bootstrap/cache
+/storage/cache
+/storage/framework/cache
+/storage/framework/sessions
+/storage/framework/testing
+/storage/framework/views
+/storage/logs
+
+# Custom
+.claude/
+composer.lock
+package-lock.json

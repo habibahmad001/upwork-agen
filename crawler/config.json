@@ -1,0 +1,18 @@
+{
+  "headless": true,
+  "timeout": 120000,
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "viewport": {
+    "width": 1920,
+    "height": 1080
+  },
+  "upwork": {
+    "loginUrl": "https://www.upwork.com/ab/account-security/login",
+    "jobsUrl": "https://www.upwork.com/nx/find-work/most-recent",
+    "maxJobs": 100
+  },
+  "storage": {
+    "path": "./playwright/storage.json",
+    "encrypt": false
+  }
+}

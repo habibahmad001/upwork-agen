@@ -1,0 +1,7 @@
+2026/07/20-21:59:49.281 7414 Creating DB D:\nodejsapps\upwork-agen\crawler\playwright\.chrome-profile\Default\IndexedDB\https_www.upwork.com_0.indexeddb.leveldb since it was missing.
+2026/07/20-21:59:49.285 7414 Reusing MANIFEST D:\nodejsapps\upwork-agen\crawler\playwright\.chrome-profile\Default\IndexedDB\https_www.upwork.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/07/20-21:59:53.851 7594 Level-0 table #5: started
+2026/07/20-21:59:53.855 7594 Level-0 table #5: 12913 bytes OK
+2026/07/20-21:59:53.857 7594 Delete type=0 #3
+2026/07/20-21:59:53.857 7594 Manual compaction at level-0 from '\x00\x02\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x03\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/07/20-21:59:56.019 7414 Manual compaction at level-0 from '\x00\x03\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x04\x00\x00\x00' @ 0 : 0; will stop at (end)
