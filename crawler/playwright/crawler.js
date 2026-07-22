@@ -410,10 +410,11 @@ async function crawl() {
   const parsedJobs = [];
 
   const jobSelectors = [
-    { list: '[data-test="job-tile-list"]', item: '[data-test="JobTile"]' },
-    { list: '[data-test="job-tile-list"]', item: '> *' },
-    { list: '.job-tile-list', item: '.job-tile' },
-    { list: 'section[aria-label*="job" i]', item: '[data-test="job-item"]' }
+    // Updated for 2024 Upwork HTML structure
+    { list: '[data-test="job-tile-list"]', item: 'section.air3-card-section.air3-card-hover' },
+    { list: '[data-test="job-tile-list"]', item: 'section[data-test="job-tile"]' },
+    // Fallback to generic section selector
+    { list: 'body', item: 'section.air3-card-section.air3-card-hover' }
   ];
 
   let jobCards = [];
@@ -437,42 +438,63 @@ async function crawl() {
 
   for (const card of jobCards) {
     const jobData = await page.evaluate((el) => {
-      // Title
-      const titleEl = el.querySelector('[data-test="job-title"]');
-      const title = titleEl?.textContent?.trim() || 'Unknown';
-      const link = titleEl?.querySelector('a')?.href || '';
+      // Extract job link and ID
+      const linkEl = el.querySelector('a[href*="/jobs/"]');
+      if (!linkEl) return null;
 
-      // Job ID
-      const jobIdMatch = link.match(/\/job\/(~|view\/)?([a-zA-Z0-9_-]+)/);
-      const jobId = jobIdMatch ? jobIdMatch[2] : null;
+      const href = linkEl.getAttribute('href');
+      const link = href.startsWith('http') ? href : 'https://www.upwork.com' + href;
+
+      // Extract job_id from URL pattern: /jobs/Job-Name_~022079845648021037082/
+      const jobIdMatch = link.match(/\/jobs\/[^_]*_~(\d+)/);
+      if (!jobIdMatch) return null;
+      const jobId = jobIdMatch[1];
+
+      // Title
+      const titleEl = el.querySelector('h3.job-tile-title a, h3.my-0 a');
+      const title = titleEl?.textContent?.trim() || 'Unknown';
 
       // Description
-      const descEl = el.querySelector('[data-test="job-description"]');
+      const descEl = el.querySelector('[data-test="job-description-text"]');
       const description = descEl?.textContent?.trim() || '';
 
-      // Budget info
+      // Job type (Fixed-price or Hourly)
+      const jobTypeEl = el.querySelector('[data-test="job-type"]');
+      const jobType = jobTypeEl?.textContent?.trim() || '';
+
+      // Budget for fixed-price
       const budgetEl = el.querySelector('[data-test="budget"]');
-      const budget = budgetEl?.textContent?.trim() || '';
+      const budget = budgetEl?.textContent?.trim() || null;
 
-      // Hourly
-      const hourlyEl = el.querySelector('[data-test="hourly-rate"]');
-      const hourlyRate = hourlyEl?.textContent?.trim() || '';
+      // Hourly rate
+      let hourlyRate = null;
+      let hourlyMin = null;
+      let hourlyMax = null;
+      if (jobType.includes('Hourly')) {
+        hourlyRate = jobType.replace('Hourly:', '').trim();
+        // Parse hourly range
+        const hourlyMatch = hourlyRate.match(/\$?(\d+(?:\.\d+)?)\s*-\s*\$?(\d+(?:\.\d+)?)/);
+        if (hourlyMatch) {
+          hourlyMin = parseFloat(hourlyMatch[1]);
+          hourlyMax = parseFloat(hourlyMatch[2]);
+        }
+      }
 
-      // Client
-      const clientCountry = el.querySelector('[data-test="country"]')?.textContent?.trim() || '';
-      const paymentVerified = !!el.querySelector('[data-test="payment-verified"]');
+      // Payment verification
+      const paymentVerifiedEl = el.querySelector('[data-test="payment-verification-status"]');
+      const paymentVerified = paymentVerifiedEl?.textContent?.trim()?.includes('verified') || false;
 
-      // Rating
-      const ratingEl = el.querySelector('[data-test="client-rating"]');
-      const clientRating = ratingEl ? parseFloat(ratingEl.textContent.match(/\d+\.?\d*/)?.[0]) : null;
+      // Client country
+      const countryEl = el.querySelector('[data-test="client-country"]');
+      const clientCountry = countryEl?.textContent?.trim()?.replace(/\s+/g, ' ').trim() || '';
 
       // Proposals
-      const proposalsEl = el.querySelector('[data-test="proposals"]');
-      const proposals = proposalsEl ? parseInt(proposalsEl.textContent.match(/\d+/)?.[0] || '0') : null;
+      const proposalsEl = el.querySelector('[data-test="proposals-tier"]');
+      const proposals = proposalsEl?.textContent?.trim() || '';
 
       // Skills
       const skills = [];
-      const skillElements = el.querySelectorAll('[data-test="skill"]');
+      const skillElements = el.querySelectorAll('[data-test="attr-item"]');
       skillElements.forEach((s) => {
         const skill = s.textContent?.trim();
         if (skill) skills.push(skill);
@@ -482,19 +504,35 @@ async function crawl() {
       const timeEl = el.querySelector('[data-test="posted-on"]');
       const timePosted = timeEl?.textContent?.trim() || '';
 
+      // Client spent
+      const spentEl = el.querySelector('[data-test="formatted-amount"]');
+      const spent = spentEl?.textContent?.trim() || '';
+
+      // Contractor tier (Expert, Intermediate, etc.)
+      const tierEl = el.querySelector('[data-test="contractor-tier"]');
+      const contractorTier = tierEl?.textContent?.trim() || '';
+
+      // Duration (for hourly jobs)
+      const durationEl = el.querySelector('[data-test="duration"]');
+      const duration = durationEl?.textContent?.trim() || '';
+
       return {
         job_id: jobId,
         title,
         description,
         budget: budget || null,
         hourly_rate: hourlyRate || null,
+        hourly_min: hourlyMin || null,
+        hourly_max: hourlyMax || null,
         client_country: clientCountry || null,
         payment_verified: paymentVerified,
-        client_rating: clientRating,
         proposals,
         skills,
         time_posted: timePosted,
         url: link,
+        spent,
+        contractor_tier: contractorTier,
+        duration,
       };
     }, card);
 

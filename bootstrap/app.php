@@ -11,6 +11,21 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__ . '/../routes/console.php',
         health: '/up',
     )
+    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule) {
+        // Run the crawler every 5 minutes
+        $schedule->command('crawler:run')
+            ->everyFiveMinutes()
+            ->between('8:00', '22:00')
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/crawler.log'))
+            ->onSuccess(function () {
+                \Log::info('Crawler completed successfully');
+            })
+            ->onFailure(function () {
+                \Log::error('Crawler failed');
+            });
+    })
     ->withMiddleware(function (Middleware $middleware) {
         //
     })

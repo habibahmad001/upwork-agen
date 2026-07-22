@@ -34,14 +34,13 @@ const GROQ_CONFIG = {
 const EMAIL_CONFIG = {
   enabled: true,
   to: 'habibahmed001@gmail.com',
-  from: 'upwork-jobs@notifications.com',
+  from: 'dontreplyback99@gmail.com',
   smtp: {
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    user: 'habibahmed001@gmail.com',
-    // User needs to set up App Password
-    pass: 'YOUR_APP_PASSWORD_HERE' // Get from https://myaccount.google.com/apppasswords
+    port: 587,
+    secure: false,
+    user: 'dontreplyback99@gmail.com',
+    pass: 'zerixamuabyxancj'
   }
 };
 
@@ -229,31 +228,83 @@ async function sendEmailNotification(jobsWithAI) {
     });
 
     const highScoreJobs = jobsWithAI.filter(j => j.ai_score >= 70);
+    const mediumScoreJobs = jobsWithAI.filter(j => j.ai_score >= 50 && j.ai_score < 70);
 
-    let emailBody = `🎯 Upwork Job Alert\n`;
-    emailBody += `==================\n\n`;
-    emailBody += `Found ${jobsWithAI.length} new jobs\n`;
-    emailBody += `${highScoreJobs.length} high-score jobs (70+)\n\n`;
+    let emailBody = `🎯 Upwork Job Alert - New Jobs Only!\n`;
+    emailBody += `====================================\n\n`;
+    emailBody += `📊 Summary:\n`;
+    emailBody += `  • Total new jobs: ${jobsWithAI.length}\n`;
+    emailBody += `  • High score (70+): ${highScoreJobs.length}\n`;
+    emailBody += `  • Medium score (50-69): ${mediumScoreJobs.length}\n`;
+    emailBody += `  • Low score (<50): ${jobsWithAI.length - highScoreJobs.length - mediumScoreJobs.length}\n\n`;
 
-    for (const job of jobsWithAI) {
+    // Sort by score descending
+    const sortedJobs = jobsWithAI.sort((a, b) => (b.ai_score || 0) - (a.ai_score || 0));
+
+    for (const job of sortedJobs) {
       const score = job.ai_score || 0;
       const rec = job.ai_recommendation || 'N/A';
-      emailBody += `\n${'★'.repeat(Math.ceil(score / 20))} ${score}/100 - ${rec.toUpperCase()}\n`;
+      const stars = Math.ceil(score / 20);
+
+      emailBody += `\n${'⭐'.repeat(stars)} ${score}/100 - ${rec.toUpperCase()}\n`;
+      emailBody += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
       emailBody += `📌 ${job.title}\n`;
-      emailBody += `💰 ${job.budget || job.hourly_rate || 'N/A'}\n`;
-      emailBody += `🔗 ${job.url}\n`;
-      if (job.ai_reason) {
-        emailBody += `💡 ${job.ai_reason}\n`;
+
+      // Time posted (how old the job is)
+      if (job.time_posted) {
+        emailBody += `⏰ Posted: ${job.time_posted} ago\n`;
       }
+
+      // Budget/Rate
+      if (job.budget) {
+        emailBody += `💰 Budget: ${job.budget}\n`;
+      } else if (job.hourly_rate) {
+        emailBody += `💰 Rate: ${job.hourly_rate}\n`;
+      }
+
+      // Job type
+      if (job.job_type) {
+        emailBody += `📝 Type: ${job.job_type}\n`;
+      }
+
+      // Payment verification
+      if (job.payment_verified) {
+        emailBody += `✅ Payment Verified\n`;
+      }
+
+      // Client country
+      if (job.client_country) {
+        emailBody += `🌍 Client: ${job.client_country}\n`;
+      }
+
+      // Proposals
+      if (job.proposals) {
+        emailBody += `📊 Proposals: ${job.proposals}\n`;
+      }
+
+      // Skills
+      if (job.skills && job.skills.length > 0) {
+        emailBody += `🔧 Skills: ${job.skills.slice(0, 5).join(', ') + (job.skills.length > 5 ? '...' : '')}\n`;
+      }
+
+      emailBody += `🔗 ${job.url}\n`;
+
+      // AI reason
+      if (job.ai_reason) {
+        emailBody += `💡 AI: ${job.ai_reason}\n`;
+      }
+
+      emailBody += `\n`;
     }
 
-    emailBody += `\n\n---\n`;
-    emailBody += `Powered by Groq AI | Upwork Job Agent`;
+    emailBody += `\n─────────────────────────────\n`;
+    emailBody += `🤖 Powered by Groq AI | Upwork Job Agent\n`;
+    emailBody += `📅 ${new Date().toLocaleString()}\n`;
 
     await transporter.sendMail({
       from: EMAIL_CONFIG.from,
       to: EMAIL_CONFIG.to,
-      subject: `Upwork: ${jobsWithAI.length} New Jobs (${highScoreJobs.length} High Score)`,
+      subject: `🎯 Upwork: ${jobsWithAI.length} New Jobs (${highScoreJobs.length} High Score)`,
       text: emailBody
     });
 
@@ -337,60 +388,102 @@ async function syncJobToLaravel(job) {
 
 /**
  * Extract jobs from page
+ * Updated selectors for current Upwork HTML structure (2024)
  */
 async function extractJobs(page) {
   const jobs = await page.evaluate(() => {
     const results = [];
-    const selectors = [
-      '[data-test="JobTile"]',
-      'section[data-test="job-tile"]',
-      'article.up-card'
-    ];
 
-    for (const selector of selectors) {
-      const elements = document.querySelectorAll(selector);
-      if (elements.length > 0) {
-        elements.forEach((el) => {
-          const linkEl = el.querySelector('a[href*="/job/"]') || el;
-          const link = linkEl.href || '';
+    // Current Upwork job tile selector (2024)
+    const jobTiles = document.querySelectorAll('section.air3-card-section.air3-card-hover');
 
-          if (link.includes('/job/')) {
-            const titleMatch = link.match(/\/job\/(?:~|view\/)?([a-zA-Z0-9_-]+)/);
+    jobTiles.forEach((tile) => {
+      try {
+        // Extract job link and ID
+        const linkEl = tile.querySelector('a[href*="/jobs/"]');
+        if (!linkEl) return;
 
-            if (titleMatch) {
-              const titleEl = el.querySelector('[data-test="job-title"], h2, h3');
-              const descEl = el.querySelector('[data-test="job-description"]');
-              const budgetEl = el.querySelector('[data-test="budget"]');
-              const hourlyEl = el.querySelector('[data-test="hourly-rate"]');
-              const skillsEls = el.querySelectorAll('[data-test="skill"]');
-              const proposalsEl = el.querySelector('[data-test="proposals"]');
-              const countryEl = el.querySelector('[data-test="country"]');
+        const href = linkEl.getAttribute('href');
+        const link = href.startsWith('http') ? href : 'https://www.upwork.com' + href;
 
-              const skills = [];
-              skillsEls.forEach(s => {
-                const t = s.textContent?.trim();
-                if (t) skills.push(t);
-              });
+        // Extract job_id from URL pattern: /jobs/Job-Name_~022079845648021037082/
+        const jobIdMatch = link.match(/\/jobs\/[^_]*_~(\d+)/);
+        if (!jobIdMatch) return;
 
-              results.push({
-                job_id: titleMatch[1],
-                url: link.startsWith('http') ? link : 'https://www.upwork.com' + link,
-                title: titleEl?.textContent?.trim() || 'Unknown',
-                description: descEl?.textContent?.trim() || '',
-                budget: budgetEl?.textContent?.trim() || null,
-                hourly_rate: hourlyEl?.textContent?.trim() || null,
-                skills: skills,
-                proposals: proposalsEl?.textContent?.trim() || null,
-                client_country: countryEl?.textContent?.trim() || null,
-                fetched_at: new Date().toISOString()
-              });
-            }
-          }
+        const job_id = jobIdMatch[1];
+
+        // Extract title
+        const titleEl = tile.querySelector('h3.job-tile-title a');
+        const title = titleEl?.textContent?.trim() || 'Unknown';
+
+        // Extract description
+        const descEl = tile.querySelector('[data-test="job-description-text"]');
+        const description = descEl?.textContent?.trim() || '';
+
+        // Extract job type and budget info
+        const jobTypeEl = tile.querySelector('[data-test="job-type"]');
+        const jobType = jobTypeEl?.textContent?.trim() || '';
+
+        // Extract budget for fixed-price jobs
+        const budgetEl = tile.querySelector('[data-test="budget"]');
+        const budget = budgetEl?.textContent?.trim() || null;
+
+        // Extract hourly rate info
+        let hourly_rate = null;
+        if (jobType.includes('Hourly')) {
+          hourly_rate = jobType.replace('Hourly:', '').trim();
+        }
+
+        // Extract skills
+        const skills = [];
+        const skillEls = tile.querySelectorAll('[data-test="attr-item"]');
+        skillEls.forEach(skillEl => {
+          const skill = skillEl?.textContent?.trim();
+          if (skill) skills.push(skill);
         });
 
-        if (results.length > 0) break;
+        // Extract proposals
+        const proposalsEl = tile.querySelector('[data-test="proposals-tier"]');
+        const proposals = proposalsEl?.textContent?.trim() || null;
+
+        // Extract payment verification status
+        const paymentVerifiedEl = tile.querySelector('[data-test="payment-verification-status"]');
+        const paymentVerified = paymentVerifiedEl?.textContent?.trim()?.includes('verified') || false;
+
+        // Extract client country
+        const countryEl = tile.querySelector('[data-test="client-country"]');
+        const client_country = countryEl?.textContent?.trim()?.replace(/\s+/g, ' ').trim() || null;
+
+        // Extract posted time
+        const postedEl = tile.querySelector('[data-test="posted-on"]');
+        const time_posted = postedEl?.textContent?.trim() || null;
+
+        // Extract client spend
+        const spentEl = tile.querySelector('[data-test="formatted-amount"]');
+        const spent = spentEl?.textContent?.trim() || null;
+
+        results.push({
+          job_id,
+          url: link,
+          title,
+          description,
+          budget,
+          hourly_rate,
+          job_type: jobType,
+          skills,
+          proposals,
+          payment_verified: paymentVerified,
+          client_country,
+          time_posted,
+          spent,
+          fetched_at: new Date().toISOString()
+        });
+
+      } catch (err) {
+        // Skip this job tile if extraction fails
+        console.error('Error extracting job:', err.message);
       }
-    }
+    });
 
     return results;
   });
@@ -407,12 +500,27 @@ function findNewJobs(currentJobs) {
 }
 
 /**
- * Save known jobs
+ * Save known jobs - stores ALL jobs from the page to prevent duplicates
+ * This ensures previously seen jobs won't be processed again
  */
-function saveKnownJobs(jobs) {
-  const allJobs = [...knownJobs, ...jobs];
-  const recentJobs = allJobs.slice(-1000);
+function saveKnownJobs(allCurrentJobs) {
+  // Merge existing known jobs with current page jobs
+  const knownIds = new Set(knownJobs.map(j => j.job_id));
+  const newJobsFromPage = allCurrentJobs.filter(j => !knownIds.has(j.job_id));
+
+  // Combine all jobs
+  const mergedJobs = [...knownJobs, ...allCurrentJobs];
+
+  // Keep only the most recent 1000 jobs to prevent file from growing too large
+  const recentJobs = mergedJobs.slice(-1000);
+
   writeFileSync(KNOWN_JOBS_PATH, JSON.stringify(recentJobs, null, 2));
+
+  // Update in-memory known jobs for next iteration
+  knownJobs.length = 0;
+  knownJobs.push(...recentJobs);
+
+  return { total: allCurrentJobs.length, new: newJobsFromPage.length };
 }
 
 // ==================== MAIN CHECKER ====================
@@ -513,12 +621,22 @@ async function checkJobs(page) {
     const newJobs = findNewJobs(jobs);
 
     if (newJobs.length > 0) {
-      console.log(`✨ ${newJobs.length} NEW jobs! Evaluating with AI...`);
+      console.log(`✨ ${newJobs.length} NEW jobs detected!`);
+
+      // Display new jobs with time posted
+      console.log('\n📋 New Jobs:');
+      for (const job of newJobs) {
+        const timeAgo = job.time_posted || 'Unknown time';
+        console.log(`  ⏰ ${timeAgo} | ${job.title.substring(0, 50)}...`);
+        console.log(`     💰 ${job.budget || job.hourly_rate || 'N/A'} | 🌍 ${job.client_country || 'N/A'}`);
+      }
+
+      console.log(`\n🤖 Evaluating ${newJobs.length} new jobs with AI...`);
 
       // Evaluate each job with AI
       const jobsWithAI = [];
       for (const job of newJobs) {
-        console.log(`  🤖 Evaluating: ${job.title.substring(0, 40)}...`);
+        console.log(`  🔄 Analyzing: ${job.title.substring(0, 40)}...`);
         const aiResult = await evaluateJobWithAI(job);
 
         jobsWithAI.push({
@@ -533,10 +651,10 @@ async function checkJobs(page) {
         await new Promise(r => setTimeout(r, 500));
       }
 
-      // Save known jobs
-      saveKnownJobs(jobsWithAI);
+      // Save ALL jobs from page to prevent re-processing
+      saveKnownJobs(jobs);
 
-      // Save all jobs to output
+      // Save new jobs with AI evaluation to output
       const output = {
         timestamp: new Date().toISOString(),
         total_found: jobs.length,
@@ -545,7 +663,7 @@ async function checkJobs(page) {
       };
       writeFileSync(OUTPUT_PATH, JSON.stringify(output, null, 2));
 
-      // Send email notification
+      // Send email notification for new jobs only
       await sendEmailNotification(jobsWithAI);
 
       // Sync to Laravel
@@ -556,10 +674,11 @@ async function checkJobs(page) {
         }
       }
 
+      console.log(`\n✅ Processed ${jobsWithAI.length} new jobs`);
       console.log(`💾 Saved to ${OUTPUT_PATH}`);
 
     } else {
-      console.log('✅ No new jobs');
+      console.log('✅ No new jobs - all jobs on page already tracked');
     }
 
   } catch (err) {
