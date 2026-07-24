@@ -9,6 +9,7 @@ use App\Services\LoggingService;
 use App\Services\SettingsService;
 use App\Services\Email\EmailService;
 use App\Services\WhatsApp\WhatsAppService;
+use App\Services\Pusher\PusherService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -54,7 +55,8 @@ class SendNotificationJob implements ShouldQueue
         SettingsService $settings,
         LoggingService $logger,
         EmailService $email,
-        WhatsAppService $whatsapp
+        WhatsAppService $whatsapp,
+        PusherService $pusher
     ): void {
         // Check if notifications are enabled
         if (!$settings->get('notification.enabled', true)) {
@@ -81,6 +83,11 @@ class SendNotificationJob implements ShouldQueue
 
             if ($method === 'whatsapp' || $method === 'both') {
                 $this->sendWhatsApp($job, $aiScore, $whatsapp, $logger);
+            }
+
+            // Always send push notification if Pusher is available (separate from email/whatsapp)
+            if ($pusher->isAvailable()) {
+                $this->sendPushNotification($job, $aiScore, $pusher, $logger);
             }
 
             // Increment rate limit counter
@@ -187,6 +194,54 @@ class SendNotificationJob implements ShouldQueue
                 'error' => $e->getMessage(),
             ]);
             throw $e;
+        }
+    }
+
+    /**
+     * Send Pusher push notification.
+     */
+    protected function sendPushNotification(
+        Job $job,
+        JobAiScore $aiScore,
+        PusherService $pusher,
+        LoggingService $logger
+    ): void {
+        try {
+            // Convert JobAiScore to AIScoreDTO for the service
+            $scoreDto = new \App\DTOs\AIScoreDTO(
+                score: $aiScore->score,
+                recommendation: $aiScore->recommendation,
+                reasoning: $aiScore->reasoning,
+                technologies: $aiScore->technologies ?? [],
+                red_flags: $aiScore->red_flags ?? []
+            );
+
+            $pusher->send($job, $scoreDto);
+
+            Notification::create([
+                'job_id' => $this->jobId,
+                'ai_score_id' => $this->aiScoreId,
+                'method' => 'pusher',
+                'destination' => config('services.pusher.channel'),
+                'message_content' => $pusher->formatMessage($job, $scoreDto),
+                'status' => 'sent',
+                'sent_at' => now(),
+            ]);
+
+            $logger->notificationSent($job->id, 'pusher:' . config('services.pusher.channel'));
+
+            Log::info('Pusher notification sent', [
+                'job_id' => $job->id,
+                'channel' => config('services.pusher.channel'),
+                'event' => config('services.pusher.event'),
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Pusher notification failed', [
+                'job_id' => $job->id,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't throw - push notifications are optional
         }
     }
 

@@ -14,6 +14,7 @@ import { chromium } from 'playwright';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import https from 'https';
+import http from 'http';
 import nodemailer from 'nodemailer';
 
 // ==================== CONFIGURATION ====================
@@ -315,6 +316,67 @@ async function sendEmailNotification(jobsWithAI) {
   }
 }
 
+// ==================== PUSHER NOTIFICATIONS ====================
+
+/**
+ * Send Pusher notification
+ */
+async function sendPusherNotification(jobsWithAI) {
+  const { default: Pusher } = await import('pusher');
+
+  const pusher = new Pusher({
+    appId: '1695089',
+    key: '4d2cd7d38e091601e28c',
+    secret: '35d959b307a0e508a7b9',
+    cluster: 'ap2',
+    useTLS: true
+  });
+
+  const channel = 'jobs';
+  const event = 'new-job';
+
+  try {
+    for (const job of jobsWithAI) {
+      const notificationData = {
+        type: 'new-job',
+        job_id: job.job_id,
+        title: job.title,
+        description: job.description?.substring(0, 200) || '',
+        budget: job.budget || job.hourly_rate || 'Not specified',
+        url: job.url,
+        client_country: job.client_country || 'Unknown',
+        payment_verified: job.payment_verified || false,
+        proposals: job.proposals || '0',
+        time_posted: job.time_posted || 'Just now',
+        skills: job.skills || [],
+        ai_score: job.ai_score || 0,
+        recommendation: job.ai_recommendation || 'consider',
+        reasoning: job.ai_reason || '',
+        emoji: getScoreEmoji(job.ai_score || 0),
+        timestamp: new Date().toISOString()
+      };
+
+      await pusher.trigger(channel, event, notificationData);
+      console.log(`📤 Pusher notification sent for: ${job.title.substring(0, 30)}...`);
+    }
+
+    console.log(`✅ Sent ${jobsWithAI.length} Pusher notifications`);
+  } catch (err) {
+    console.error('❌ Pusher notification failed:', err.message);
+  }
+}
+
+/**
+ * Get emoji based on AI score
+ */
+function getScoreEmoji(score) {
+  if (score >= 90) return '🔥';
+  if (score >= 80) return '✨';
+  if (score >= 70) return '👍';
+  if (score >= 50) return '🤔';
+  return '⚠️';
+}
+
 // ==================== LARAVEL BACKEND SYNC ====================
 
 /**
@@ -352,7 +414,7 @@ async function syncJobToLaravel(job) {
     };
 
     return new Promise((resolve) => {
-      const req = require('http').request(options, (res) => {
+      const req = http.request(options, (res) => {
         let data = '';
         res.on('data', (chunk) => { data += chunk; });
         res.on('end', () => {
@@ -531,6 +593,7 @@ async function start() {
   console.log(`⏰ Check interval: ${CHECK_INTERVAL / 1000} seconds`);
   console.log(`🤖 AI: Groq (${GROQ_CONFIG.model})`);
   console.log(`📧 Email: ${EMAIL_CONFIG.enabled ? 'Enabled' : 'Disabled'}`);
+  console.log(`📡 Pusher: Enabled`);
   console.log(`🔗 Laravel: ${LARAVEL_CONFIG.enabled ? 'Enabled' : 'Disabled'}`);
   console.log('');
 
@@ -572,16 +635,29 @@ async function start() {
     timeout: 60000
   });
 
-  console.log('\n⏸️  PAUSED:');
-  console.log('1. Complete any Cloudflare challenge in the browser');
-  console.log('2. Wait for job listings to load');
-  console.log('3. Press Enter here to start AI-powered checking...\n');
+  // Check if auto-start mode (for background execution)
+  const autoStart = process.env.AUTO_START === 'true' || process.argv.includes('--auto-start');
 
-  await new Promise(resolve => {
-    process.stdin.once('data', resolve);
-  });
+  if (autoStart) {
+    console.log('\n🤖 Auto-start mode: Waiting 30 seconds for page to load...');
+    console.log('💡 Complete Cloudflare challenge in the browser if needed\n');
 
-  console.log('\n✅ Starting AI-powered job checker...\n');
+    // Wait 30 seconds for page to fully load and user to complete challenges
+    await new Promise(resolve => setTimeout(resolve, 30000));
+
+    console.log('✅ Starting AI-powered job checker automatically...\n');
+  } else {
+    console.log('\n⏸️  PAUSED:');
+    console.log('1. Complete any Cloudflare challenge in the browser');
+    console.log('2. Wait for job listings to load');
+    console.log('3. Press Enter here to start AI-powered checking...\n');
+
+    await new Promise(resolve => {
+      process.stdin.once('data', resolve);
+    });
+
+    console.log('\n✅ Starting AI-powered job checker...\n');
+  }
 
   // First check
   await checkJobs(page);
@@ -665,6 +741,9 @@ async function checkJobs(page) {
 
       // Send email notification for new jobs only
       await sendEmailNotification(jobsWithAI);
+
+      // Send Pusher notification
+      await sendPusherNotification(jobsWithAI);
 
       // Sync to Laravel
       if (LARAVEL_CONFIG.enabled) {

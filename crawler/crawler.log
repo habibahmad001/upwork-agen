@@ -1,0 +1,20 @@
+🚀 AI-Powered Upwork Job Checker
+===================================
+
+✅ Loaded 87 cookies
+✅ Loaded 636 known jobs
+🌐 Launching browser...
+📍 URL: https://www.upwork.com/nx/find-work/most-recent
+⏰ Check interval: 60 seconds
+🤖 AI: Groq (llama-3.3-70b-versatile)
+📧 Email: Enabled
+📡 Pusher: Enabled
+🔗 Laravel: Enabled
+
+🌐 Navigating to jobs page...
+
+⏸️  PAUSED:
+1. Complete any Cloudflare challenge in the browser
+2. Wait for job listings to load
+3. Press Enter here to start AI-powered checking...
+

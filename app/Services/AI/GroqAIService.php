@@ -459,6 +459,110 @@ class GroqAIService
     }
 
     /**
+     * Generate a job proposal
+     */
+    public function generateProposal(array $jobData): string
+    {
+        if (empty($this->apiKey)) {
+            throw new Exception('Groq API key is not configured');
+        }
+
+        try {
+            $prompt = $this->buildProposalPrompt($jobData);
+
+            $response = Http::timeout($this->timeout)
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                    'Content-Type' => 'application/json',
+                ])
+                ->post("{$this->baseUrl}/chat/completions", [
+                    'model' => $this->model,
+                    'messages' => [
+                        [
+                            'role' => 'system',
+                            'content' => 'You are an expert Upwork proposal writer. Write personalized, professional proposals that convert. No emojis, no fluff, just value.'
+                        ],
+                        [
+                            'role' => 'user',
+                            'content' => $prompt
+                        ]
+                    ],
+                    'temperature' => 0.7,
+                    'max_tokens' => 800,
+                ]);
+
+            if (!$response->successful()) {
+                throw new Exception('Groq API error: ' . $this->parseError($response));
+            }
+
+            $result = $response->json();
+            return $result['choices'][0]['message']['content'] ?? 'Failed to generate proposal';
+
+        } catch (Exception $e) {
+            Log::error('Proposal generation failed', [
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Build proposal generation prompt
+     */
+    protected function buildProposalPrompt(array $job): string
+    {
+        $skills = is_array($job['skills'] ?? null) ? implode(', ', $job['skills']) : ($job['skills'] ?? 'Not specified');
+
+        $prompt = "You are an expert Upwork proposal writer with a high success rate.\n\n";
+        $prompt .= "Your goal is NOT to write a generic proposal. Your goal is to convince the client that I fully understand their problem and that hiring me is the safest and lowest-risk decision.\n\n";
+        $prompt .= "Read the client's job description carefully and create a personalized proposal following these rules:\n\n";
+        $prompt .= "1. Maximum 8-10 short lines.\n";
+        $prompt .= "2. Never use generic phrases like:\n";
+        $prompt .= "   - \"I am excited to apply.\"\n";
+        $prompt .= "   - \"I believe I am the best candidate.\"\n";
+        $prompt .= "   - \"I have read your job posting.\"\n";
+        $prompt .= "   - \"I can do this job.\"\n";
+        $prompt .= "3. Start by showing you understand the client's exact problem in 1-2 sentences.\n";
+        $prompt .= "4. Mention the likely cause or technical challenge when possible. This demonstrates expertise without overwhelming the client.\n";
+        $prompt .= "5. Briefly explain how you would solve the problem or your approach.\n";
+        $prompt .= "6. Ask ONE intelligent technical question that naturally follows from the job description.\n";
+        $prompt .= "7. Mention ONLY the skills that are directly relevant to this specific job.\n";
+        $prompt .= "8. Mention:\n";
+        $prompt .= "   - 15+ years of web development experience.\n";
+        $prompt .= "   - Relevant experience only if it matches the project.\n";
+        $prompt .= "9. Include my portfolio: https://habib-ahmad.netlify.app/portfolio\n";
+        $prompt .= "10. End with a confident but professional CTA.\n\n";
+        $prompt .= "Writing style:\n";
+        $prompt .= "- Natural and conversational.\n";
+        $prompt .= "- Confident without sounding arrogant.\n";
+        $prompt .= "- Avoid buzzwords and unnecessary adjectives.\n";
+        $prompt .= "- Every sentence should provide value.\n";
+        $prompt .= "- Don't repeat information.\n";
+        $prompt .= "- Don't make unrealistic promises.\n";
+        $prompt .= "- Don't use emojis.\n";
+        $prompt .= "- Sound like an experienced senior developer, not a salesperson.\n\n";
+        $prompt .= "Whenever appropriate, subtly reduce the client's perceived risk by mentioning things like:\n";
+        $prompt .= "- identifying root causes instead of applying temporary fixes,\n";
+        $prompt .= "- writing maintainable code,\n";
+        $prompt .= "- considering scalability,\n";
+        $prompt .= "- minimizing downtime,\n";
+        $prompt .= "- avoiding regressions,\n";
+        $prompt .= "- keeping communication clear throughout the project.\n\n";
+        $prompt .= "Use this signature:\n\n";
+        $prompt .= "Best Regards,\n";
+        $prompt .= "Habib Ahmad\n\n";
+        $prompt .= "---\n\n";
+        $prompt .= "Job Details:\n";
+        $prompt .= "Title: " . ($job['title'] ?? 'Unknown') . "\n";
+        $prompt .= "Description: " . substr(strip_tags($job['description'] ?? ''), 0, 2000) . "\n";
+        $prompt .= "Budget: " . ($job['budget'] ?? 'Not specified') . "\n";
+        $prompt .= "Skills: " . $skills . "\n\n";
+        $prompt .= "Write a personalized proposal for this job:";
+
+        return $prompt;
+    }
+
+    /**
      * Batch evaluate jobs (interface implementation)
      */
     public function batchEvaluate(array $jobs): array

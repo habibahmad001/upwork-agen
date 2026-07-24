@@ -43,3 +43,25 @@ Route::get('/health', function () {
         'timestamp' => now()->toIso8601String(),
     ]);
 })->name('health');
+
+// Jobs Listing API (public - for jobs-listing page)
+Route::get('/jobs-listing', function () {
+    $jobsPath = base_path('crawler/jobs.json');
+
+    if (!file_exists($jobsPath)) {
+        return response()->json([
+            'jobs' => [],
+            'timestamp' => now()->toIso8601String(),
+            'message' => 'No jobs data available'
+        ]);
+    }
+
+    $jobsData = json_decode(file_get_contents($jobsPath), true);
+
+    return response()->json([
+        'jobs' => $jobsData['jobs'] ?? [],
+        'timestamp' => $jobsData['timestamp'] ?? now()->toIso8601String(),
+        'total_found' => $jobsData['total_found'] ?? 0,
+        'new_jobs' => $jobsData['new_jobs'] ?? 0,
+    ]);
+})->name('api.jobs-listing');

@@ -7,6 +7,7 @@ use App\Http\Controllers\Dashboard\NotificationController;
 use App\Http\Controllers\Dashboard\SettingController;
 use App\Http\Controllers\Dashboard\LogController;
 use App\Http\Controllers\Dashboard\AnalyticsController;
+use App\Http\Controllers\CookieSetupController;
 
 // Authentication routes (simplified - handled in layout)
 Route::match(['get', 'post'], '/login', function () {
@@ -76,4 +77,34 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/crawler', [AnalyticsController::class, 'crawler'])->name('crawler');
         Route::get('/ai', [AnalyticsController::class, 'ai'])->name('ai');
     });
+});
+
+// Pusher test page (no auth required for testing)
+Route::get('/pusher-config', function () {
+    return response()->json([
+        'key' => config('services.pusher.app_key'),
+        'cluster' => config('services.pusher.cluster'),
+        'channel' => config('services.pusher.channel'),
+        'event' => config('services.pusher.event'),
+        'enabled' => !empty(config('services.pusher.app_key')),
+    ]);
+});
+
+Route::get('/pusher-test', function () {
+    return view('pusher-test');
+})->name('pusher-test');
+
+// Jobs Detail Listing page (separate from pusher-test)
+Route::get('/jobs-listing', function () {
+    return view('jobs-listing');
+})->name('jobs-listing');
+
+// Proposal generation
+Route::post('/api/proposal/generate', [App\Http\Controllers\ProposalController::class, 'generate'])->name('proposal.generate');
+
+// Cookie setup (no auth required for easier access)
+Route::prefix('cookie-setup')->name('cookie-setup.')->group(function () {
+    Route::get('/', [CookieSetupController::class, 'index'])->name('index');
+    Route::get('/status', [CookieSetupController::class, 'status'])->name('status');
+    Route::post('/', [CookieSetupController::class, 'store'])->name('store');
 });

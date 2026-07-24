@@ -1,57 +1,31 @@
 {
-  "timestamp": "2026-07-22T11:20:36.016Z",
-  "total_found": 2,
-  "new_jobs": 2,
+  "timestamp": "2026-07-24T09:17:24.000Z",
+  "total_found": 10,
+  "new_jobs": 1,
   "jobs": [
     {
-      "job_id": "022079888849720408693",
-      "url": "https://www.upwork.com/jobs/Laravel-Application-Speed-Update_~022079888849720408693/?referrer_url_path=find_work_home",
-      "title": "Laravel Application Speed Update",
-      "description": "I need assistance with updating my Laravel application, focusing on speed improvements. The application must be thoroughly tested before going live to ensure users do not encounter issues. The ideal candidate will have experience in performance optimization and ensuring seamless updates.",
+      "job_id": "022080582268267649015",
+      "url": "https://www.upwork.com/jobs/Elite-GHL-Website-Builder-Home-Services-Design-Full-Build_~022080582268267649015/?referrer_url_path=find_work_home",
+      "title": "Elite GHL Website Builder — Home Services (Design + Full Build)",
+      "description": "We're a home-services marketing company building a reusable GoHighLevel site template we'll clone across our client base. This isn't a from-scratch job — we already have the components, reference builds, and written instructions. You'll hybridize them into one polished template and build it fully live in GHL.\n\nThis is a design-and-build role, not SEO. Build with clean semantic structure (one H1, proper H2s, sectioned rows) so our SEO specialist can layer the technical work on afterward.\n\nHard rules — read before applying:\n\n1. Native GHL elements only. Absolutely no custom CSS. We will not maintain per-client CSS. If your builds depend on custom CSS, we're not a fit.\n2. Need specific images or branding assets during the build? Request them and we'll provide.\n3. Due Sunday.\n\nYou must be:\n\nA master of the native GHL website/funnel builder — working entirely within its elements\n\nA real designer: layout, spacing, typography, hierarchy. If it looks cheap, we're out.\n\nAble to get the best possible mobile speed out of GHL\n\nIdeally proven on home-services / contractor sites\n\nTo apply:\n\nSend the single best website you have ever built. One link. Preferably home services.\n\nMore than one link = auto-disqualified. We want your one best, not a portfolio. If that one site isn't excellent, we don't move forward — the bar is the ceiling of your skill.\n\nHourly. Tell us your rate.",
       "budget": null,
-      "hourly_rate": "$40-$60",
-      "job_type": "Hourly: $40-$60",
+      "hourly_rate": "$8-$20",
+      "job_type": "Hourly: $8-$20",
       "skills": [
-        "Laravel",
-        "PHP",
-        "MySQL",
-        "MySQL Programming"
-      ],
-      "proposals": null,
-      "payment_verified": true,
-      "client_country": "NLD",
-      "time_posted": "1 minute ago",
-      "spent": "$200+",
-      "fetched_at": "2026-07-22T11:20:34.351Z",
-      "ai_score": 60,
-      "ai_recommendation": "consider",
-      "ai_reason": "Low budget for potential complex work, but clear project description and required skills",
-      "ai_confidence": 0.7
-    },
-    {
-      "job_id": "022079888721545736324",
-      "url": "https://www.upwork.com/jobs/WordPress-Site-Builder-Needed_~022079888721545736324/?referrer_url_path=find_work_home",
-      "title": "WordPress Site Builder Needed",
-      "description": "I am looking for a skilled freelancer to quickly build a WordPress site using an existing Elementor theme or other solutions. The ideal candidate should have experience in web development and design, with a strong understanding of WordPress and PHP. The project requires efficiency and speed to deliver a high-quality site within a short timeframe.",
-      "budget": null,
-      "hourly_rate": "Hourly",
-      "job_type": "Hourly",
-      "skills": [
-        "WordPress",
-        "Web Development",
-        "PHP",
-        "Web Design"
+        "Website",
+        "Web Design",
+        "gohighlevel"
       ],
       "proposals": "Fewer than 5",
       "payment_verified": true,
-      "client_country": "France",
-      "time_posted": "2 minutes ago",
-      "spent": "$0",
-      "fetched_at": "2026-07-22T11:20:34.351Z",
+      "client_country": "United States",
+      "time_posted": "3 minutes ago",
+      "spent": "$2K+",
+      "fetched_at": "2026-07-24T09:17:23.121Z",
       "ai_score": 80,
       "ai_recommendation": "consider",
-      "ai_reason": "clear project description, required skills are specific, but budget adequacy and client payment verification status are unknown",
-      "ai_confidence": 0.7
+      "ai_reason": "The budget is relatively low for a design-and-build project, but the client provides clear instructions and existing components, which could simplify the work.",
+      "ai_confidence": 0.8
     }
   ]
 }

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pusher Notification Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .status {
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .status-item:last-child { border-bottom: none; }
+        .status-label { color: #666; }
+        .status-value { font-weight: 600; color: #333; }
+        .status.connected { border-left: 4px solid #10b981; }
+        .status.disconnected { border-left: 4px solid #ef4444; }
+        .notifications {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .notification {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            animation: slideIn 0.3s ease;
+        }
+        .notification:last-child { border-bottom: none; }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .notification-type {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .notification-type.test { background: #dbeafe; color: #1e40af; }
+        .notification-type.new-job { background: #d1fae5; color: #065f46; }
+        .notification-time {
+            font-size: 12px;
+            color: #999;
+        }
+        .notification-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        .notification-body {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+        .notification-body pre {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: #999;
+        }
+        .empty-state svg {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 Pusher Notification Dashboard</h1>
+
+        <div id="status" class="status disconnected">
+            <div class="status-item">
+                <span class="status-label">Connection</span>
+                <span class="status-value" id="connectionStatus">Connecting...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Channel</span>
+                <span class="status-value" id="channelName">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Cluster</span>
+                <span class="status-value" id="clusterName">-</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Notifications</span>
+                <span class="status-value" id="notificationCount">0</span>
+            </div>
+        </div>
+
+        <div class="notifications">
+            <div id="emptyState" class="empty-state">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
+                <p>Waiting for notifications...<br>Run <code>php artisan test:pusher --test</code> to test</p>
+            </div>
+            <div id="notifications"></div>
+        </div>
+    </div>
+
+    <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+    <script>
+        // Get config from Laravel's config (you'd typically inject this)
+        const PUSHER_CONFIG = {
+            key: '<?= config("services.pusher.app_key") ?>',
+            cluster: '<?= config("services.pusher.cluster") ?>',
+            channel: '<?= config("services.pusher.channel") ?>',
+            event: '<?= config("services.pusher.event") ?>'
+        };
+
+        // For testing, you can also hardcode:
+        // const PUSHER_CONFIG = { key: 'your-key', cluster: 'ap2', channel: 'jobs', event: 'new-job' };
+
+        let notificationCount = 0;
+
+        // Initialize Pusher
+        const pusher = new Pusher(PUSHER_CONFIG.key, {
+            cluster: PUSHER_CONFIG.cluster,
+            enabledTransports: ['ws', 'wss'],
+        });
+
+        const channel = pusher.subscribe(PUSHER_CONFIG.channel);
+
+        // Update status
+        pusher.connection.bind('connected', () => {
+            updateStatus(true);
+            console.log('✅ Connected to Pusher');
+        });
+
+        pusher.connection.bind('disconnected', () => {
+            updateStatus(false);
+            console.log('❌ Disconnected from Pusher');
+        });
+
+        pusher.connection.bind('error', (err) => {
+            console.error('Pusher connection error:', err);
+            updateStatus(false);
+        });
+
+        // Listen for all events
+        channel.bind_global((eventName, data) => {
+            console.log('📩 Event received:', eventName, data);
+            addNotification(eventName, data);
+        });
+
+        // Also bind to the specific event
+        channel.bind(PUSHER_CONFIG.event, (data) => {
+            console.log('🎯 New job event:', data);
+        });
+
+        channel.bind('test', (data) => {
+            console.log('🧪 Test event:', data);
+        });
+
+        function updateStatus(connected) {
+            const status = document.getElementById('status');
+            const statusText = document.getElementById('connectionStatus');
+
+            if (connected) {
+                status.classList.remove('disconnected');
+                status.classList.add('connected');
+                statusText.textContent = '✅ Connected';
+                document.getElementById('channelName').textContent = PUSHER_CONFIG.channel;
+                document.getElementById('clusterName').textContent = PUSHER_CONFIG.cluster;
+            } else {
+                status.classList.remove('connected');
+                status.classList.add('disconnected');
+                statusText.textContent = '❌ Disconnected';
+            }
+        }
+
+        function addNotification(type, data) {
+            const emptyState = document.getElementById('emptyState');
+            if (emptyState) emptyState.remove();
+
+            notificationCount++;
+            document.getElementById('notificationCount').textContent = notificationCount;
+
+            const container = document.getElementById('notifications');
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+
+            const time = new Date().toLocaleTimeString();
+            const typeClass = type === 'test' ? 'test' : 'new-job';
+
+            let content = '';
+            if (data.type === 'test' || type === 'test') {
+                content = '<p class="notification-title">🧪 Test Notification</p>';
+            } else if (data.title) {
+                content = `<p class="notification-title">${data.emoji || '📌'} ${data.title}</p>`;
+                if (data.budget) content += `<p>💰 Budget: ${data.budget}</p>`;
+                if (data.ai_score) content += `<p>⭐ AI Score: ${data.ai_score}/100 - ${data.recommendation}</p>`;
+                if (data.reasoning) content += `<p>💡 ${data.reasoning}</p>`;
+                if (data.url) content += `<p><a href="${data.url}" target="_blank">View Job →</a></p>`;
+            }
+
+            notification.innerHTML = `
+                <div class="notification-header">
+                    <span class="notification-type ${typeClass}">${type}</span>
+                    <span class="notification-time">${time}</span>
+                </div>
+                <div class="notification-body">
+                    ${content}
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+
+            container.insertBefore(notification, container.firstChild);
+        }
+    </script>
+</body>
+</html>
