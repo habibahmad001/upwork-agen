@@ -1,0 +1,47 @@
+<!-- Windows Task Scheduler - Import this to run on startup -->
+<!-- To use: Open Task Scheduler → Import Task → Browse this file -->
+<Task xmlns="http://schemas.microsoft.com/worker/2004/02/maintask">
+  <Triggers>
+    <BootTrigger>
+      <Enabled>true</Enabled>
+    </BootTrigger>
+    <LogonTrigger>
+      <Enabled>true</Enabled>
+    </LogonTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <UserId>S-1-5-18</UserId>
+      <LogonType>Password</LogonType>
+      <RunLevel>HighestAvailable</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <AllowHardTerminate>true</AllowHardTerminate>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <AllowStartOnDemand>true</AllowStartOnDemand>
+    <Enabled>true</Enabled>
+    <Hidden>false</Hidden>
+    <RunOnlyIfIdle>false</RunOnlyIfIdle>
+    <DisallowStartOnRemoteSession>false</DisallowStartOnRemoteSession>
+    <UseUnifiedSchedulingEngine>true</UseUnifiedSchedulingEngine>
+    <WakeToRun>false</WakeToRun>
+    <ExecutionLimitsLimited>true</ExecutionLimitsLimited>
+    <StopOnIdleEnd>false</StopOnIdleEnd>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>node</Command>
+      <Arguments>ai-job-checker.js --auto-start</Arguments>
+      <WorkingDirectory>D:\nodejsapps\upwork-agen\crawler</WorkingDirectory>
+    </Exec>
+  </Actions>
+</Task>

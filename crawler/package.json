@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "start": "node playwright/crawler.js",
+    "ai-checker": "node ai-job-checker.js",
     "login": "node playwright/login.js",
+    "setup-cookies": "node setup-cookies.js",
     "test": "node playwright/test.js"
   },
   "keywords": [
@@ -17,7 +19,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "dotenv": "^16.4.5",
     "nodemailer": "^9.0.3",
-    "playwright": "^1.42.0"
+    "playwright": "^1.42.0",
+    "pusher": "^5.3.4"
   }
 }

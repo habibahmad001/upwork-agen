@@ -50,6 +50,7 @@ class Job extends Model
         'hourly_max' => 'decimal:2',
         'payment_verified' => 'boolean',
         'spent' => 'decimal:2',
+        'hire_rate' => 'decimal:2',
         'client_rating' => 'decimal:2',
         'proposals' => 'integer',
         'job_posted_at' => 'datetime',

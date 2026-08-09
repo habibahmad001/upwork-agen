@@ -1,10 +1,18 @@
 <?php
 
 return [
-    'default' => env('QUEUE_CONNECTION', 'redis'),
+    'default' => env('QUEUE_CONNECTION', 'sync'),
+
     'connections' => [
         'sync' => [
             'driver' => 'sync',
+        ],
+        'database' => [
+            'driver' => 'database',
+            'table' => 'queue_jobs',
+            'queue' => env('QUEUE_NAME', 'default'),
+            'retry_after' => 90,
+            'after_commit' => false,
         ],
         'redis' => [
             'driver' => 'redis',
@@ -15,6 +23,7 @@ return [
             'after_commit' => false,
         ],
     ],
+
     'failed' => [
         'driver' => env('QUEUE_FAILED_DRIVER', 'database-uuids'),
         'database' => env('DB_CONNECTION', 'mysql'),

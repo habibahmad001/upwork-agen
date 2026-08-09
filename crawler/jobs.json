@@ -1,57 +1,30 @@
 {
-  "timestamp": "2026-07-22T11:20:36.016Z",
-  "total_found": 2,
-  "new_jobs": 2,
+  "timestamp": "2026-08-07T20:35:29.558Z",
+  "total_found": 10,
+  "new_jobs": 1,
   "jobs": [
     {
-      "job_id": "022079888849720408693",
-      "url": "https://www.upwork.com/jobs/Laravel-Application-Speed-Update_~022079888849720408693/?referrer_url_path=find_work_home",
-      "title": "Laravel Application Speed Update",
-      "description": "I need assistance with updating my Laravel application, focusing on speed improvements. The application must be thoroughly tested before going live to ensure users do not encounter issues. The ideal candidate will have experience in performance optimization and ensuring seamless updates.",
-      "budget": null,
-      "hourly_rate": "$40-$60",
-      "job_type": "Hourly: $40-$60",
+      "job_id": "022085825894260658367",
+      "url": "https://www.upwork.com/jobs/Competitor-Analysis-Website-Development_~022085825894260658367/?referrer_url_path=find_work_home",
+      "title": "Competitor Analysis Website Development",
+      "description": "Hi,\n\nI need someone to develop a competitor analysis website for me. Here are the overall broad level specs:\n\n https://acesse.one/8of3hk4\n\nI need someone who has experience of building custom websites, not Wordpress hopefully.\n\nThanks",
+      "budget": "$150",
+      "hourly_rate": null,
+      "job_type": "Fixed-price",
       "skills": [
         "Laravel",
-        "PHP",
-        "MySQL",
-        "MySQL Programming"
-      ],
-      "proposals": null,
-      "payment_verified": true,
-      "client_country": "NLD",
-      "time_posted": "1 minute ago",
-      "spent": "$200+",
-      "fetched_at": "2026-07-22T11:20:34.351Z",
-      "ai_score": 60,
-      "ai_recommendation": "consider",
-      "ai_reason": "Low budget for potential complex work, but clear project description and required skills",
-      "ai_confidence": 0.7
-    },
-    {
-      "job_id": "022079888721545736324",
-      "url": "https://www.upwork.com/jobs/WordPress-Site-Builder-Needed_~022079888721545736324/?referrer_url_path=find_work_home",
-      "title": "WordPress Site Builder Needed",
-      "description": "I am looking for a skilled freelancer to quickly build a WordPress site using an existing Elementor theme or other solutions. The ideal candidate should have experience in web development and design, with a strong understanding of WordPress and PHP. The project requires efficiency and speed to deliver a high-quality site within a short timeframe.",
-      "budget": null,
-      "hourly_rate": "Hourly",
-      "job_type": "Hourly",
-      "skills": [
-        "WordPress",
-        "Web Development",
-        "PHP",
-        "Web Design"
+        "Web Development"
       ],
       "proposals": "Fewer than 5",
       "payment_verified": true,
-      "client_country": "France",
-      "time_posted": "2 minutes ago",
-      "spent": "$0",
-      "fetched_at": "2026-07-22T11:20:34.351Z",
-      "ai_score": 80,
-      "ai_recommendation": "consider",
-      "ai_reason": "clear project description, required skills are specific, but budget adequacy and client payment verification status are unknown",
-      "ai_confidence": 0.7
+      "client_country": "Pakistan",
+      "time_posted": "5 minutes ago",
+      "spent": "$30K+",
+      "fetched_at": "2026-08-07T20:35:28.198Z",
+      "ai_score": 20,
+      "ai_recommendation": "skip",
+      "ai_reason": "Low budget for custom website development and unclear project scope",
+      "ai_confidence": 0.8
     }
   ]
 }
