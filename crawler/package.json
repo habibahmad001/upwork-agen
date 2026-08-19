@@ -7,6 +7,8 @@
   "scripts": {
     "start": "node playwright/crawler.js",
     "ai-checker": "node ai-job-checker.js",
+    "profile-analyzer": "node profile-analyzer.js",
+    "analyze-profile": "node profile-analyzer-from-html.js",
     "login": "node playwright/login.js",
     "setup-cookies": "node setup-cookies.js",
     "test": "node playwright/test.js"

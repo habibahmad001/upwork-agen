@@ -1,0 +1,69 @@
+{
+  "profile": {
+    "name": "Unknown",
+    "title": "Unknown",
+    "overview": "",
+    "hourlyRate": "Not specified",
+    "location": "Unknown",
+    "jobSuccessScore": "Not available",
+    "totalHours": "Not specified",
+    "totalEarnings": "Not specified",
+    "skills": [],
+    "portfolioCount": 0,
+    "employments": [],
+    "certifications": [],
+    "portfolioItems": [],
+    "tests": [],
+    "languages": [],
+    "education": [],
+    "badges": [],
+    "availability": "Not specified",
+    "extractedAt": "2026-08-09T08:34:26.369Z"
+  },
+  "analysis": {
+    "overallScore": 0,
+    "strengths": [],
+    "weaknesses": [],
+    "skillRecommendations": [],
+    "titleImprovements": [
+      "Add specific keywords related to the freelancer's skills and services to improve search visibility.",
+      "Highlight key strengths and areas of expertise to attract high-quality clients and stand out from the competition.",
+      "Use a clear and concise format to make the title easy to read and understand."
+    ],
+    "overviewImprovements": [],
+    "portfolioRecommendations": [],
+    "generalRecommendations": [],
+    "titleRating": 0,
+    "suggestedTitles": [
+      "Expert Freelance Writer & Editor | Content Creation & Strategy",
+      "Digital Marketing Specialist | SEO, Social Media, & Content Expert",
+      "Results-Driven Virtual Assistant | Admin Support & Project Management"
+    ],
+    "titleIssues": [
+      "The current title 'Unknown' is not specific and does not provide any information about the freelancer's skills or services.",
+      "The title does not highlight any key strengths or areas of expertise, making it difficult for potential clients to find the freelancer.",
+      "The title is not keyword-optimized, which can negatively impact the freelancer's visibility in search results."
+    ],
+    "portfolioRating": 0,
+    "portfolioStrengths": [],
+    "portfolioGaps": [
+      "Lack of portfolio items",
+      "Insufficient demonstration of key skills",
+      "No variety in project types",
+      "No quality presentations to evaluate"
+    ],
+    "recommendedProjects": [
+      "Create a personal website or blog to demonstrate web development skills",
+      "Develop a simple mobile app to showcase programming abilities",
+      "Design a logo or graphic to demonstrate creative skills",
+      "Write a technical article or guide to demonstrate writing and expertise"
+    ],
+    "portfolioTips": [
+      "Use high-quality images and screenshots to showcase work",
+      "Write detailed descriptions of projects, including goals, challenges, and outcomes",
+      "Use clear and concise language to explain technical concepts",
+      "Organize portfolio items into clear categories and sections"
+    ]
+  },
+  "analyzedAt": "2026-08-09T08:34:33.297Z"
+}

@@ -311,6 +311,7 @@
         let currentProposal = '';
         let currentJobData = {};
         let jobCounter = 0;
+        let jobDataMap = {}; // Store job data by ID
 
         // Initialize Pusher
         const pusher = new Pusher(CONFIG.key, {
@@ -482,11 +483,14 @@
                 </div>
 
                 <div class="job-actions">
-                    <button class="proposal-btn" onclick="generateProposal(this, '${cardId}', ${JSON.stringify(data).replace(/"/g, '&quot;')})">
+                    <button class="proposal-btn" onclick="generateProposal(this, '${cardId}')">
                         Quick Proposal
                     </button>
                 </div>
             `;
+
+            // Store job data in map for later retrieval
+            jobDataMap[cardId] = data;
 
             container.insertBefore(card, container.firstChild);
 
@@ -507,8 +511,7 @@
         }
 
         function formatTime(timestamp) {
-            if (!timestamp) return 'Just now';
-            const date = new Date(timestamp);
+            const date = timestamp ? new Date(timestamp) : new Date();
             return date.toLocaleTimeString();
         }
 
@@ -519,9 +522,27 @@
         }
 
         // Generate Proposal
-        async function generateProposal(btn, cardId, jobData) {
+        async function generateProposal(btn, cardId) {
             btn.disabled = true;
             btn.innerHTML = 'Generating... <span class="spinner"></span>';
+
+            // Retrieve job data from map
+            const jobData = jobDataMap[cardId];
+            if (!jobData) {
+                alert('Job data not found. Please try refreshing the page.');
+                btn.disabled = false;
+                btn.innerHTML = 'Quick Proposal';
+                return;
+            }
+
+            // Check required fields
+            if (!jobData.title || !jobData.description) {
+                alert('Job title and description are required for proposal generation.');
+                btn.disabled = false;
+                btn.innerHTML = 'Quick Proposal';
+                return;
+            }
+
             currentJobData = jobData;
 
             try {
@@ -530,7 +551,8 @@
                 document.getElementById('proposalContent').textContent = proposal;
                 document.getElementById('proposalModal').classList.add('active');
             } catch (error) {
-                alert('Failed to generate proposal. Please try again.');
+                console.error('Proposal generation error:', error);
+                alert('Failed to generate proposal: ' + (error.message || 'Please try again.'));
             }
 
             btn.disabled = false;
@@ -556,10 +578,15 @@
             });
 
             if (!response.ok) {
-                throw new Error('Failed to generate proposal');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to generate proposal');
             }
 
             const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.error || 'Failed to generate proposal');
+            }
+
             return result.proposal || 'Failed to generate proposal';
         }
 
